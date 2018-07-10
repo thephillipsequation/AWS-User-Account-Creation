@@ -1,0 +1,271 @@
+---
+Description: Cross-Account Managed Active Directory Deployment
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+Parameters:
+  GitBranch:
+    Type: String
+  GitRepo:
+    Type: String
+
+Resources:
+  PipelineBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+
+  ActiveDirectoryDeployTest:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: ActiveDirectoryDeployTest
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.6.5
+      Artifacts:
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 10
+      ServiceRole: !GetAtt CodePipelineRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - env
+                - pwd
+                - ls -la
+                - pip --version
+                - aws --version
+                - pip install --upgrade pip
+                - pip install --upgrade --upgrade-strategy eager awscli
+            build:
+              commands:
+                - python bin/user_account_creation.py
+          artifacts:
+            files:
+              - '**/*'
+
+  ActiveDirectoryJoinTest:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: ActiveDirectoryJoinTest
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.6.5
+        EnvironmentVariables:
+          - Name: ACCOUNTS
+            Value:
+              Ref: Accounts
+          - Name: EXTERNAL_ID
+            Value:
+              Ref: ExternalId
+          - Name: ROLE_NAME
+            Value:
+              Ref: CrossAccountPipelineRole
+          - Name: ACTIVE_DIRECTORY_STACK_NAME
+            Value:
+              Ref: ActiveDirectoryStackName
+          - Name: TEST_ACCOUNT
+            Value:
+              Ref: TestAccount
+          - Name: AD_DOMAIN_FQDN
+            Value:
+              Ref: AdDomainFqdn
+      Artifacts:
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 10
+      ServiceRole: !GetAtt CodePipelineRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - env
+                - pwd
+                - ls -la
+                - pip --version
+                - aws --version
+                - pip install --upgrade pip
+                - pip install --upgrade --upgrade-strategy eager awscli
+            build:
+              commands:
+                - python active.directory.join.test.py
+          artifacts:
+            files:
+              - '**/*'
+
+  ActiveDirectoryVerifyTest:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: ActiveDirectoryVerifyTest
+      Environment:
+        Type: WINDOWS_CONTAINER
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/windows-base:1.0
+      Artifacts:
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 10
+      ServiceRole: !GetAtt CodePipelineRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - env
+                - pwd
+                - ls -la
+            build:
+              commands:
+                - python active.directory.verify.test.py
+          artifacts:
+            files:
+              - '**/*'
+
+  ActiveDirectoryDeployLive:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: ActiveDirectoryDeployLive
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.6.5
+      Artifacts:
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 10
+      ServiceRole: !GetAtt CodePipelineRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: !Sub |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - env
+                - pwd
+                - ls -la
+            build:
+              commands:
+                - python active.directory.deploy.live.py
+          artifacts:
+            files:
+              - '**/*'
+     
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: managed-ad-codepipeline-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - codepipeline.amazonaws.com
+            - cloudformation.amazonaws.com
+            - codecommit.amazonaws.com
+            - codebuild.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: codepipeline-service
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            -
+              Action: 
+                - '*'
+              Effect: Allow
+              Resource:
+                - '*'
+
+  ActiveDirectoryPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: ActiveDirectoryBootstrap
+      ArtifactStore:
+        Type: S3
+        Location: !Ref PipelineBucket
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+        - Name: CloneSource
+          Actions:
+            - Name: CodeCommit
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: Source
+              Configuration:
+                BranchName: !Ref GitBranch
+                RepositoryName: !Ref GitRepo
+              RunOrder: 1
+
+        - Name: AD-DeployTest
+          Actions: 
+            - Name: AD-DeployTest
+              InputArtifacts:
+                - Name: Source
+              OutputArtifacts:
+                - Name: DeployTest
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref ActiveDirectoryDeployTest
+              RunOrder: 1
+            - Name: AD-JoinTest
+              InputArtifacts:
+                - Name: DeployTest
+              OutputArtifacts:
+                - Name: JoinTest
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref ActiveDirectoryJoinTest
+              RunOrder: 2
+
+        - Name: AD-VerifyTest
+          Actions:
+            - Name: AD-VerifyTest
+              InputArtifacts:
+                - Name: DeployTest
+              OutputArtifacts:
+                - Name: VerifyTest
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref ActiveDirectoryVerifyTest
+              RunOrder: 1
+
+        - Name: AD-DeployLive
+          Actions:
+            - Name: AD-DeployLive
+              InputArtifacts:
+                - Name: VerifyTest
+              OutputArtifacts:
+                - Name: DeployLive
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref ActiveDirectoryDeployLive
+              RunOrder: 1
