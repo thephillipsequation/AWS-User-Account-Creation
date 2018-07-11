@@ -18,7 +18,7 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
 
-  ActiveDirectoryDeployTest:
+  UserAccountCreation:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: ActiveDirectoryDeployTest
@@ -51,72 +51,10 @@ Resources:
             files:
               - '**/*'
 
-  ActiveDirectoryJoinTest:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: ActiveDirectoryJoinTest
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/python:3.6.5
-      Artifacts:
-        Type: CODEPIPELINE
-      TimeoutInMinutes: 10
-      ServiceRole: !GetAtt CodePipelineRole.Arn
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: !Sub |
-          version: 0.2
-          phases:
-            install:
-              commands:
-                - env
-                - pwd
-                - ls -la
-                - pip --version
-                - aws --version
-                - pip install --upgrade pip
-                - pip install --upgrade --upgrade-strategy eager awscli
-            build:
-              commands:
-                - python active.directory.join.test.py
-          artifacts:
-            files:
-              - '**/*'
-
-  UserAccountCreation:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: ActiveDirectoryVerifyTest
-      Environment:
-        Type: WINDOWS_CONTAINER
-        ComputeType: BUILD_GENERAL1_MEDIUM
-        Image: aws/codebuild/windows-base:1.0
-      Artifacts:
-        Type: CODEPIPELINE
-      TimeoutInMinutes: 10
-      ServiceRole: !GetAtt CodePipelineRole.Arn
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: !Sub |
-          version: 0.2
-          phases:
-            install:
-              commands:
-                - env
-                - pwd
-                - ls -la
-            build:
-              commands:
-                - python active.directory.verify.test.py
-          artifacts:
-            files:
-              - '**/*'
-
   CodePipelineRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: managed-ad-codepipeline-role
+      RoleName: codepipeline-role
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -144,7 +82,7 @@ Resources:
   ActiveDirectoryPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: ActiveDirectoryBootstrap
+      Name: UserAccountCreationBootstrap
       ArtifactStore:
         Type: S3
         Location: !Ref PipelineBucket

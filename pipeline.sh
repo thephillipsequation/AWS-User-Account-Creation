@@ -4,11 +4,14 @@ STACK_NAME=user-account-pipeline
 AWS_PROFILE=default
 GIT_BRANCH=master
 GIT_REPO=AWS-User-Account-Creation
+AWS_REGION=us-east-1
+GIT_OWNER=thephillipsequation
 
 PARAMETERS=" \
   ParameterKey=GitBranch,ParameterValue=${GIT_BRANCH} \
   ParameterKey=GitRepo,ParameterValue=${GIT_REPO} \
-  ParameterKey=GitRepo,ParameterValue=${GIT_TOKEN} \
+  ParameterKey=GitToken,ParameterValue=${GIT_TOKEN} \
+  ParameterKey=GithubOwner,ParameterValue=${GIT_OWNER} \
   "
 
 
