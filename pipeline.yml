@@ -10,7 +10,8 @@ Parameters:
     Type: String
   GithubOwner:
     Type: String
-  
+  GitToken:
+    Type: String
 
 Resources:
   PipelineBucket:
@@ -163,5 +164,5 @@ Resources:
                 Owner: !Ref GithubOwner
                 Repo: !Ref GitRepo
                 Branch: !Ref GitBranch
-                OAuthToken:
+                OAuthToken: !Ref GitToken
               RunOrder: 1
