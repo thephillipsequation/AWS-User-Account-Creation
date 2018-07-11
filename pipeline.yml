@@ -104,3 +104,19 @@ Resources:
                 Branch: !Ref GitBranch
                 OAuthToken: !Ref GitToken
               RunOrder: 1
+        
+        - Name: UAC-Test
+          Actions: 
+            - Name: UAC-Test
+              InputArtifacts:
+                - Name: Source
+              OutputArtifacts:
+                - Name: DeployTest
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref UserAccountCreation
+              RunOrder: 1
