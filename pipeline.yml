@@ -8,6 +8,9 @@ Parameters:
     Type: String
   GitRepo:
     Type: String
+  GithubOwner:
+    Type: String
+  
 
 Resources:
   PipelineBucket:
@@ -55,25 +58,6 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/python:3.6.5
-        EnvironmentVariables:
-          - Name: ACCOUNTS
-            Value:
-              Ref: Accounts
-          - Name: EXTERNAL_ID
-            Value:
-              Ref: ExternalId
-          - Name: ROLE_NAME
-            Value:
-              Ref: CrossAccountPipelineRole
-          - Name: ACTIVE_DIRECTORY_STACK_NAME
-            Value:
-              Ref: ActiveDirectoryStackName
-          - Name: TEST_ACCOUNT
-            Value:
-              Ref: TestAccount
-          - Name: AD_DOMAIN_FQDN
-            Value:
-              Ref: AdDomainFqdn
       Artifacts:
         Type: CODEPIPELINE
       TimeoutInMinutes: 10
@@ -99,7 +83,7 @@ Resources:
             files:
               - '**/*'
 
-  ActiveDirectoryVerifyTest:
+  UserAccountCreation:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: ActiveDirectoryVerifyTest
@@ -128,35 +112,6 @@ Resources:
             files:
               - '**/*'
 
-  ActiveDirectoryDeployLive:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: ActiveDirectoryDeployLive
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/python:3.6.5
-      Artifacts:
-        Type: CODEPIPELINE
-      TimeoutInMinutes: 10
-      ServiceRole: !GetAtt CodePipelineRole.Arn
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: !Sub |
-          version: 0.2
-          phases:
-            install:
-              commands:
-                - env
-                - pwd
-                - ls -la
-            build:
-              commands:
-                - python active.directory.deploy.live.py
-          artifacts:
-            files:
-              - '**/*'
-     
   CodePipelineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -196,76 +151,17 @@ Resources:
       Stages:
         - Name: CloneSource
           Actions:
-            - Name: CodeCommit
+            - Name: Github
               ActionTypeId:
                 Category: Source
-                Owner: AWS
+                Owner: ThirdParty
                 Version: 1
-                Provider: CodeCommit
+                Provider: Github
               OutputArtifacts:
                 - Name: Source
               Configuration:
-                BranchName: !Ref GitBranch
-                RepositoryName: !Ref GitRepo
-              RunOrder: 1
-
-        - Name: AD-DeployTest
-          Actions: 
-            - Name: AD-DeployTest
-              InputArtifacts:
-                - Name: Source
-              OutputArtifacts:
-                - Name: DeployTest
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: 1
-                Provider: CodeBuild
-              Configuration:
-                ProjectName: !Ref ActiveDirectoryDeployTest
-              RunOrder: 1
-            - Name: AD-JoinTest
-              InputArtifacts:
-                - Name: DeployTest
-              OutputArtifacts:
-                - Name: JoinTest
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: 1
-                Provider: CodeBuild
-              Configuration:
-                ProjectName: !Ref ActiveDirectoryJoinTest
-              RunOrder: 2
-
-        - Name: AD-VerifyTest
-          Actions:
-            - Name: AD-VerifyTest
-              InputArtifacts:
-                - Name: DeployTest
-              OutputArtifacts:
-                - Name: VerifyTest
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: 1
-                Provider: CodeBuild
-              Configuration:
-                ProjectName: !Ref ActiveDirectoryVerifyTest
-              RunOrder: 1
-
-        - Name: AD-DeployLive
-          Actions:
-            - Name: AD-DeployLive
-              InputArtifacts:
-                - Name: VerifyTest
-              OutputArtifacts:
-                - Name: DeployLive
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: 1
-                Provider: CodeBuild
-              Configuration:
-                ProjectName: !Ref ActiveDirectoryDeployLive
+                Owner: !Ref GithubOwner
+                Repo: !Ref GitRepo
+                Branch: !Ref GitBranch
+                OAuthToken:
               RunOrder: 1
