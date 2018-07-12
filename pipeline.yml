@@ -79,7 +79,7 @@ Resources:
               Resource:
                 - '*'
 
-  ActiveDirectoryPipeline:
+  UserAccountPipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
       Name: UserAccountCreationBootstrap
