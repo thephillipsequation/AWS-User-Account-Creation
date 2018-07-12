@@ -95,7 +95,7 @@ Resources:
                 Category: Source
                 Owner: ThirdParty
                 Version: 1
-                Provider: Github
+                Provider: GitHub
               OutputArtifacts:
                 - Name: Source
               Configuration:
