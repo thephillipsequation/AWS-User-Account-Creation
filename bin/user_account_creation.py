@@ -12,9 +12,9 @@ def main():
         UserName=test_user
 
     )
-    iam.get_user(
+    print(iam.get_user(
         UserName=test_user
-    )
+    ))
     print("Hello World")
 
 if __name__== "__main__":
