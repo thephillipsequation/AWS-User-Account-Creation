@@ -1,10 +1,9 @@
 import boto3
 from botocore.exceptions import ClientError, ParamValidationError
 
-def create_user(client, username, path="\"):
+def create_user(client, username):
     client.create_user(
-        UserName=username,
-        Path=path
+        UserName=username
         )
 
 def main():
