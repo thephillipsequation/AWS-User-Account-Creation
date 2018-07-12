@@ -15,3 +15,8 @@ To update the pipeline stack
 `sh pipeline.sh update`
 To delete the pipeline stack
 `sh pipeline.sh delete`
+
+## TODO:
+- The user creation method must have unit tests
+- The user creation method must be able to Create users from a YAML file
+- The user creation method must be able to assign users to groups

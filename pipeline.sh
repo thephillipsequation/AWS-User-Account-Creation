@@ -14,20 +14,7 @@ PARAMETERS=" \
   ParameterKey=GithubOwner,ParameterValue=${GIT_OWNER} \
   "
 
-WEBHOOK="{"webhook": 
-  {"name": "github-webhook",
-   "targetPipeline": "pipeline_name",
-   "targetAction": "source_action_name",
-   "filters": [
-    {
-      "jsonPath": "$.ref", 
-      "matchEquals": "refs/heads/{Branch}"
-    }
-   ],
-   "authentication": "GITHUB_HMAC",
-   "authenticationConfiguration": {"SecretToken":"secret"}
-  }
-}"
+
 
 deploy_cfn () {
   if [ $# -gt 0 ]; then
