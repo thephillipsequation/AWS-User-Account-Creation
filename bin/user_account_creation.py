@@ -8,7 +8,6 @@ def main():
     test_user = "test1"
     iam = boto3.client('iam')
     iam.create_user(
-        path="/test/",
         UserName=test_user
 
     )
