@@ -13,9 +13,7 @@ PARAMETERS=" \
   ParameterKey=GitToken,ParameterValue=${GIT_TOKEN} \
   ParameterKey=GithubOwner,ParameterValue=${GIT_OWNER} \
   "
-
-
-
+  
 deploy_cfn () {
   if [ $# -gt 0 ]; then
     case "$1" in
