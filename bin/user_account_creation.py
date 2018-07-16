@@ -23,7 +23,7 @@ def user_exists(client, username):
             UserName=username
         )
         print("User {} exists".format(username))
-        return True, resp
+        return True
     except ClientError as error:
         if error.response['Error']['Code'] == 'NoSuchEntity':
             print("User {} does not exist".format(username))
