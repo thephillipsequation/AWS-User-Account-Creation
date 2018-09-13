@@ -33,10 +33,9 @@ def main():
     '''Main function'''
     test_user = "test1"
     iam = boto3.client('iam')
-    delete_user(iam, test_user)
-    delete_user(iam, test_user)
     create_user(iam, test_user)
     user_exists(iam, test_user)
+    delete_user(iam, test_user)
     user_exists(iam, "steve")
 
 if __name__ == "__main__":
