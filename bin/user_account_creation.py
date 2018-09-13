@@ -10,6 +10,20 @@ def create_user(client, username):
         UserName=username
         )
 
+def update_login_profile(client, username, password, reset):
+    '''Provide console access for a user
+        username: must be a valid IAM username
+        password: must comply with the IAM password policy
+        reset: boolean value denoting if a password reset is required
+    '''
+    client.update_login_profile(
+        UserName='string',
+        Password='string',
+        if reset is False:
+            PasswordResetRequired=False
+        else:
+            PasswordResetRequired=True
+    )
 def delete_user(client, username):
     '''Delete an IAM user'''
     client.delete_user(
