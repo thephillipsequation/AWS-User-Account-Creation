@@ -6,17 +6,19 @@ from botocore.exceptions import ClientError
 
 def create_user(client, username):
     '''Create an IAM user'''
-    client.create_user(
+    response = client.create_user(
         UserName=username
         )
+    print(response)
 
-def update_login_profile(client, username, password, reset):
-    '''Provide console access for a user
+def update_login_profile(client, username, password, reset=True):
+    '''
+        Provide console access for a user
         username: must be a valid IAM username
         password: must comply with the IAM password policy
         reset: boolean value denoting if a password reset is required
     '''
-    client.update_login_profile(
+    response = client.update_login_profile(
         UserName='string',
         Password='string',
         if reset is False:
@@ -24,14 +26,21 @@ def update_login_profile(client, username, password, reset):
         else:
             PasswordResetRequired=True
     )
+    print(response)
+
 def delete_user(client, username):
-    '''Delete an IAM user'''
-    client.delete_user(
+    '''
+        Delete an IAM user
+    '''
+    response = client.delete_user(
         UserName=username
     )
+    print(response)
 
 def user_exists(client, username):
-    '''Check if a given IAM user exists, output result'''
+    '''
+        Check if a given IAM user exists, output result
+    '''
     try:
         resp = client.get_user(
             UserName=username
