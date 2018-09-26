@@ -21,10 +21,7 @@ def update_login_profile(client, username, password, reset=True):
     response = client.update_login_profile(
         UserName='string',
         Password='string',
-        if reset is False:
-            PasswordResetRequired=False
-        else:
-            PasswordResetRequired=True
+        PasswordResetRequired=reset
     )
     print(response)
 
