@@ -16,6 +16,17 @@ To update the pipeline stack
 To delete the pipeline stack
 `sh pipeline.sh delete`
 
+
+## To Test Python
+For mac
+`brew install pyenv virtualenv`
+`pyenv virtualenv 3.7.0 uac`
+`pyenv activate uac`
+`pip install -r requirements.txt`
+`python -m pytest tests/`
+
+
+
 ## Acceptance Criteria:
 - The user creation method must have unit tests
 - The user creation method must be able to Create users from a YAML file

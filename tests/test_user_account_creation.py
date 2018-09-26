@@ -1,6 +1,6 @@
 import boto3
 from moto import mock_iam
-import user_account_creation.user_account_creation as uac
+import user_account_creation.main as uac
 
 
 
