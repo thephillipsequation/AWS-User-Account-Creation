@@ -37,13 +37,11 @@ Resources:
           phases:
             install:
               commands:
-                - env
-                - pwd
-                - ls -la
-                - pip --version
-                - aws --version
                 - pip install --upgrade pip
                 - pip install --upgrade --upgrade-strategy eager awscli
+                - pip install pytest
+                - pip install -r requirements.txt
+                - python -m pytest tests/
             build:
               commands:
                 - python bin/user_account_creation.py
@@ -119,4 +117,4 @@ Resources:
                 Provider: CodeBuild
               Configuration:
                 ProjectName: !Ref UserAccountCreation
-              RunOrder: 1
+              RunOrder: 2

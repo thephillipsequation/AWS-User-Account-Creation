@@ -13,5 +13,7 @@ def test_user_creation():
     uac.create_user(client, username)
     assert uac.user_exists(client, username) is True
 
+@mock_iam
+
 
 
