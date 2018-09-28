@@ -41,10 +41,9 @@ Resources:
                 - pip install --upgrade --upgrade-strategy eager awscli
                 - pip install pytest
                 - pip install -r requirements.txt
-                - python -m pytest tests/
             build:
               commands:
-                - python bin/user_account_creation.py
+                - python -m pytest tests/
           artifacts:
             files:
               - '**/*'
