@@ -37,3 +37,4 @@ For mac
 - consume yaml file
 - handle yaml file
 - decouple tests
+- update README.md
